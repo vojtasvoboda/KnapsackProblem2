@@ -1,0 +1,12 @@
+Řešení problému batohu dynamickým programováním, metodou větví a hranic a aproximativním algoritmem
+
+Naprogramujte řešení problému batohu:
+- metodou větví a hranic (B&B) tak, aby omezujícím faktorem byla hodnota optimalizačního kritéria. Tj. použijte ořezávání shora (překročení kapacity batohu) i zdola (stávající řešení nemůže být lepší než nejlepší dosud nalezené)
+- metodou dynamického programování (dekompozice podle vah nebo podle cen)
+- modifikujte tento program tak, aby pracoval s omezenou přesností zobrazení vah nebo cen (podle zvoleného přístupu k dynamickému programování) - aproximativní algoritmus.
+
+Zpráva by měla obsahovat:
+- Popis implementovaných metod.
+- Srovnání výpočetních časů hrubé síly, B&B, dynamického programování a aproximativního algoritmu (grafy vítány).
+- Závislost chyby a výpočetního času aproximativního algoritmu na zvolené přesnosti zobrazení.
+- Zhodnocení naměřených výsledků.

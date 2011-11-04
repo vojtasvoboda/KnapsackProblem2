@@ -15,9 +15,9 @@ public class Main {
     /* nosnost batohu pro testovaci funkci */
     final static int NOSNOST = 32;
     /* maximalni pocet nactenych instanci (spis pro testovani) */
-    final static int MAX_INSTANCES = 60;
+    final static int MAX_INSTANCES = 1;
     /* soubor s instancema (soubory jsou: 4, 10, 15, 20, 22, 25, 27, 30, 32, 35, 37, 40) */
-    final static int FILE_NO = 32;
+    final static int FILE_NO = 4;
     /* pocet opakovani celeho vypoctu */
     final static int ITERATION_NO = 1;
 
@@ -63,11 +63,13 @@ public class Main {
                 batoh.setNosnost(Integer.parseInt(instanceProblemu[i][2]));
 
                 /* ziskej polozky v batohu z baraku */
-                // System.out.println("Startuji BranchBound algoritmus");
-                BranchBoundAlgorithm bbAlg = new BranchBoundAlgorithm(barak, batoh);
-                bbAlg.computeStolenItems();
+                System.out.println("Startuji DynamicAlgorithm");
+                // BranchBoundAlgorithm bbAlg = new BranchBoundAlgorithm(barak, batoh);
+                // bbAlg.computeStolenItems();
                 // BruteForceAlgorithm bfAlg = new BruteForceAlgorithm(barak, batoh);
                 // bfAlg.computeStolenItems();
+                DynamicAlgorithm dynAlg = new DynamicAlgorithm(batoh, barak);
+                dynAlg.computeStolenItems();
 
                 /* vypiseme polozky */
                 // System.out.println("Vypis polozek v batohu instance " + instanceProblemu[i][0]);

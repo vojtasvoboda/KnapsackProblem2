@@ -1,5 +1,6 @@
 package batoh2;
 
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -11,9 +12,9 @@ public class Batoh extends ItemsContainer {
     /**
      * Batoh ma navic nosnost a aktualni zatizeni
      */
-    public int nosnost;
-    public int aktualniZatizeni;
-    public int aktualniCena;
+    private int nosnost;
+    private int aktualniZatizeni;
+    private int aktualniCena;
 
     /**
      * Konstruktor, nastavuje nosnost
@@ -22,6 +23,24 @@ public class Batoh extends ItemsContainer {
     public Batoh(int nosnost) {
         super();
         this.nosnost = nosnost;
+        this.aktualniCena = 0;
+        this.aktualniZatizeni = 0;
+    }
+
+    /**
+     * Nastavi pole polozek a prepocita zatizeni a cenu
+     * @param polozky
+     */
+    @Override
+    public void setPolozky(List<BatohItem> polozky) {
+        this.polozky = polozky;
+        BatohItem item;
+        Iterator it = this.polozky.iterator();
+        while ( it.hasNext() ) {
+            item = (BatohItem) it.next();
+            this.aktualniCena += item.getHodnota();
+            this.aktualniZatizeni += item.getVaha();
+        }
     }
 
     /**
