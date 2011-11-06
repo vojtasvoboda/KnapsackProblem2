@@ -84,7 +84,7 @@ public class Batoh extends ItemsContainer {
      */
     public boolean isFull() {
         if ( this.nosnost < this.aktualniZatizeni ) {
-            System.err.println("Batoh je plny!");
+            // System.err.println("Batoh je plny!");
             return true;
         }
         return false;

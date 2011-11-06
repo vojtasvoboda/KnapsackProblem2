@@ -29,11 +29,9 @@ public class DynamicAlgorithm implements IAlgorithm {
         Batoh cilovy = solveInstance(startovni);
         /* konec algoritmu, takze musime do batohu dat nejlepsi vysledek */
         System.out.println("Rekurze skoncila.");
-        /*
         this.batoh.setPolozky(cilovy.getPolozky());
         this.batoh.setAktualniCena(cilovy.getAktualniCena());
         this.batoh.setAktualniZatizeni(cilovy.getAktualniZatizeni());
-        */
     }
 
     /**
@@ -64,7 +62,7 @@ public class DynamicAlgorithm implements IAlgorithm {
                                 ", n=" + state.getPolozky().size() +
                                 ", sumaV=" + state.getAktualniZatizeni() +
                                 ", sumaC=" + state.getAktualniCena() +
-                                "), ale polozky nuluji a nosnost take.");
+                                "), polozky nuluji a nosnost take pokud byla mensi jak 0.");
             // TODO return vypocitane[0][0];
             if ( state.getNosnost() < 0 ) state.setNosnost(0);
             state.setPolozky();
@@ -104,27 +102,36 @@ public class DynamicAlgorithm implements IAlgorithm {
         // vypocitane[state.getAktualniZatizeni() - vahaOdebiranePolozky][state.getAktualniCena() - cenaOdebiranePolozky] = stavKdePolozkaNeni;
 
 
-        // porovname oba stavy
+        // porovname oba vracene stavy
         // if (C1+cn) > C0 return(X1.1,  C1+cn, m1+vn)
         //            else return(X0.0, C0, m0)
         if ( ((stavKdePolozkaJe.getAktualniCena() + cenaOdebiranePolozky) >
             stavKdePolozkaNeni.getAktualniCena()) ) {
 
-            // upravime polozku pro vraceni
-            stavKdePolozkaJe.getPolozky().add(odebiranaPolozka1);
-            stavKdePolozkaJe.setAktualniCena(stavKdePolozkaJe.getAktualniCena() + odebiranaPolozka1.getHodnota());
-            // vypocitane[state.getAktualniZatizeni()][state.getAktualniCena()] = stavKdePolozkaJe;
-            System.out.println("Vracim polozku (M=" + state.getNosnost() +
-                            ", n=" + state.getPolozky().size() +
-                            ", sumaV=" + state.getAktualniZatizeni() +
-                            ", sumaC=" + state.getAktualniCena() + ")");
-            return stavKdePolozkaJe;
+            // zkusime tam vratit polozku a kdy to projde, tak vratime novy stav
+            if ( stavKdePolozkaJe.addItem(odebiranaPolozka1) ) {
+                // vypocitane[state.getAktualniZatizeni()][state.getAktualniCena()] = stavKdePolozkaJe;
+                stavKdePolozkaJe.setNosnost(stavKdePolozkaJe.getNosnost() + vahaOdebiranePolozky);
+                System.out.println("Vracim polozku kde JE (M=" + stavKdePolozkaJe.getNosnost() +
+                                ", n=" + stavKdePolozkaJe.getPolozky().size() +
+                                ", sumaV=" + stavKdePolozkaJe.getAktualniZatizeni() +
+                                ", sumaC=" + stavKdePolozkaJe.getAktualniCena() + ")");
+                return stavKdePolozkaJe;
+
+            } else {
+                System.out.println("Nepovedlo se pridat, vracim polozku kde NENI (M=" + stavKdePolozkaNeni.getNosnost() +
+                                ", n=" + stavKdePolozkaNeni.getPolozky().size() +
+                                ", sumaV=" + stavKdePolozkaNeni.getAktualniZatizeni() +
+                                ", sumaC=" + stavKdePolozkaNeni.getAktualniCena() + ")");
+                return stavKdePolozkaNeni;
+            }
+
 
         } else {
-            System.out.println("Vracim polozku (M=" + state.getNosnost() +
-                            ", n=" + state.getPolozky().size() +
-                            ", sumaV=" + state.getAktualniZatizeni() +
-                            ", sumaC=" + state.getAktualniCena() + ")");
+            System.out.println("Vracim polozku kde NENI (M=" + stavKdePolozkaNeni.getNosnost() +
+                            ", n=" + stavKdePolozkaNeni.getPolozky().size() +
+                            ", sumaV=" + stavKdePolozkaNeni.getAktualniZatizeni() +
+                            ", sumaC=" + stavKdePolozkaNeni.getAktualniCena() + ")");
             return stavKdePolozkaNeni;
         }
     }
