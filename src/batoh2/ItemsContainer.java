@@ -40,6 +40,10 @@ public class ItemsContainer {
         this.polozky = polozky;
     }
 
+    public void setPolozky() {
+        this.polozky = new ArrayList<BatohItem>();
+    }
+
     /**
      * Seradi polozky dle pomeru cena/vaha
      */

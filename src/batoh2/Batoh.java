@@ -104,7 +104,7 @@ public class Batoh extends ItemsContainer {
      */
     @Override
     public List<BatohItem> getPolozky() {
-        this.orderItems();
+        // this.orderItems();
         return polozky;
     }
 
