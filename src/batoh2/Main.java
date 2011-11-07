@@ -15,9 +15,9 @@ public class Main {
     /* nosnost batohu pro testovaci funkci */
     final static int NOSNOST = 32;
     /* maximalni pocet nactenych instanci (spis pro testovani) */
-    final static int MAX_INSTANCES = 50;
+    final static int MAX_INSTANCES = 1;
     /* soubor s instancema (soubory jsou: 4, 10, 15, 20, 22, 25, 27, 30, 32, 35, 37, 40) */
-    final static int FILE_NO = 10;
+    final static int FILE_NO = 4;
     /* pocet opakovani celeho vypoctu */
     final static int ITERATION_NO = 1;
 
@@ -74,11 +74,11 @@ public class Main {
                 /* vypiseme polozky */
                 // System.out.println("Vypis polozek v batohu instance " + instanceProblemu[i][0]);
                 // batoh.writeItems();
-                System.out.println(instanceProblemu[i][0] + "\t" +
+                /*System.out.println(instanceProblemu[i][0] + "\t" +
                                    reseniProblemu[i][2] + "\t" +
                                    batoh.getAktualniCena() + "\t" +
                                    batoh.getAktualniZatizeni() + "\t" +
-                                   batoh.getNosnost());
+                                   batoh.getNosnost());*/
                 
                 /* vycistime batoh i barak pred dalsi instanci */
                 barak.clear();
