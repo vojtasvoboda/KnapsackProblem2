@@ -19,7 +19,7 @@ public class DynamicAlgorithm implements IAlgorithm {
     public DynamicAlgorithm(Batoh batoh, Barak barak) {
         this.batoh = batoh;
         this.barak = barak;
-        this.vypocitane = new Batoh[barak.polozky.size() + 1][batoh.getNosnost() + 1];
+        this.vypocitane = new Batoh[barak.polozky.size() + 2][batoh.getNosnost() + 1];
     }
 
     public void computeStolenItems() {
@@ -57,7 +57,6 @@ public class DynamicAlgorithm implements IAlgorithm {
      */
     private Batoh solveInstance(Batoh state) {
 
-        // 18/114 - 42/136 - 88/192 - 3/223 (v, c), suma 151/665
         if ( DEBUG ) {
             System.out.println("Vstupuji do instance (M=" + state.getNosnost() +
                                 ", n=" + state.getPolozky().size() +
@@ -65,33 +64,24 @@ public class DynamicAlgorithm implements IAlgorithm {
                                 ", sumaC=" + state.getAktualniCena() + ")");
         }
 
-        // pokud je to trivialni reseni, tak vrat trivialni
-        if ( isTrivialInstance(state) ) {
-            if ( DEBUG ) {
-                System.out.println("Vracim polozku TRIV (M=" + state.getNosnost() +
-                                    ", n=" + state.getPolozky().size() +
-                                    ", sumaV=" + state.getAktualniZatizeni() +
-                                    ", sumaC=" + state.getAktualniCena() +
-                                    "), polozky nuluji a nosnost take pokud byla mensi jak 0.");
-            }
-            // TODO return vypocitane[0][0];
-            if ( state.getNosnost() <= 0 ) state.setNosnost(0);
-            state.setPolozky();
-            return state;
-        }
 
-        // pokud stav uz zname, vratime z tabulky
+        // pokud je to trivialni reseni, tak vrat trivialni
+        if ( isTrivialInstance(state) ) return getTrivialInstance(state);
+
+
+        // pokud stav uz zname, vratime z tabulky kopii
         if ( vypocitane[state.getPolozky().size()][state.getNosnost()] != null ) {
             if ( DEBUG ) { System.out.println("Nasel jsem stav (" + state.getPolozky().size() +
-                                "," + state.getNosnost() + ") v tabulce, vracim."); }
-            return vypocitane[state.getPolozky().size()][state.getNosnost()];
+                                "," + state.getNosnost() + ") v tabulce, vracim kopii."); }
+            return vypocitane[state.getPolozky().size()][state.getNosnost()].clone();
         }
 
-        // aktualne resene polozky (jejich kopie) a definice polozky
+
+        // aktualne resene polozky (jejich kopie) a definice polozky pro odebrani
         List<BatohItem> aktualniPolozky1 = new ArrayList<BatohItem>(state.getPolozky());
         List<BatohItem> aktualniPolozky2 = new ArrayList<BatohItem>(state.getPolozky());
-        BatohItem odebiranaPolozka1 = aktualniPolozky1.get(aktualniPolozky1.size() - 1); // asi by sli sjednotit
-        BatohItem odebiranaPolozka2 = aktualniPolozky2.get(aktualniPolozky2.size() - 1); // s touto polozkou
+        BatohItem odebiranaPolozka1 = aktualniPolozky1.get(aktualniPolozky1.size() - 1); // TODO asi by sli sjednotit
+        BatohItem odebiranaPolozka2 = aktualniPolozky2.get(aktualniPolozky2.size() - 1); // TODO s touto polozkou
         int vahaOdebiranePolozky = odebiranaPolozka1.getVaha();
         int cenaOdebiranePolozky = odebiranaPolozka1.getHodnota();
 
@@ -102,10 +92,15 @@ public class DynamicAlgorithm implements IAlgorithm {
         aktualniPolozky1.remove(odebiranaPolozka1);
         novyBatoh1.setPolozky(aktualniPolozky1);
         Batoh stavKdePolozkaJe = solveInstance(novyBatoh1);
-        Batoh stavKdePolozkaJeCopy = new Batoh(stavKdePolozkaJe.getNosnost());
-        stavKdePolozkaJeCopy.setPolozky(stavKdePolozkaJe.getPolozky());
-        stavKdePolozkaJeCopy.setAktualniCena(stavKdePolozkaJe.getAktualniCena());
-        stavKdePolozkaJeCopy.setAktualniZatizeni(stavKdePolozkaJe.getAktualniZatizeni());
+        // pokud neni takovy stav ulozeny v tabulce, tak udelame jeho kopii a ulozime ho
+        if ( (stavKdePolozkaJe.getPolozky().size() <= barak.polozky.size()) &
+             (vypocitane[novyBatoh1.getPolozky().size()][novyBatoh1.getNosnost()] == null ) ) {
+            // ulozime kopii do tabulky vypocitanych
+            Batoh stavKdePolozkaJeCopy = stavKdePolozkaJe.clone();
+            if ( DEBUG ) { System.out.println("Ukladam stav (" + stavKdePolozkaJe.getPolozky().size() +
+                                    "," + stavKdePolozkaJe.getNosnost() + ") do tabulky."); }
+            vypocitane[novyBatoh1.getPolozky().size()][novyBatoh1.getNosnost()] = stavKdePolozkaJeCopy;
+        }
 
 
         // spustime druhou vetev rekurze, kde n-ta polozka *NENI*
@@ -114,33 +109,26 @@ public class DynamicAlgorithm implements IAlgorithm {
         aktualniPolozky2.remove(odebiranaPolozka2);
         novyBatoh2.setPolozky(aktualniPolozky2);
         Batoh stavKdePolozkaNeni = solveInstance(novyBatoh2);
-        // ulozime kopii do tabulky vypocitanych
-        Batoh stavKdePolozkaNeniCopy = new Batoh(stavKdePolozkaNeni.getNosnost());
-        stavKdePolozkaNeniCopy.setPolozky(stavKdePolozkaNeni.getPolozky());
-        stavKdePolozkaNeniCopy.setAktualniCena(stavKdePolozkaNeni.getAktualniCena());
-        stavKdePolozkaNeniCopy.setAktualniZatizeni(stavKdePolozkaNeni.getAktualniZatizeni());
-        if ( stavKdePolozkaNeniCopy.getPolozky().size() <= barak.polozky.size() ) {
-            if ( DEBUG ) { System.out.println("Ukladam stav (" + stavKdePolozkaNeniCopy.getPolozky().size() +
-                                    "," + stavKdePolozkaNeniCopy.getNosnost() + ") do tabulky."); }
-            // vypocitane[novyBatoh2.getPolozky().size()][novyBatoh2.getNosnost()] = stavKdePolozkaNeniCopy;
+        // pokud neni takovy stav ulozeny v tabulce, tak udelame jeho kopii a ulozime ho
+        if ( (stavKdePolozkaNeni.getPolozky().size() <= barak.polozky.size()) &
+             (vypocitane[novyBatoh2.getPolozky().size()][novyBatoh2.getNosnost()] == null ) ) {
+            // ulozime kopii do tabulky vypocitanych
+            Batoh stavKdePolozkaNeniCopy = stavKdePolozkaNeni.clone();
+            if ( DEBUG ) { System.out.println("Ukladam stav (" + stavKdePolozkaNeni.getPolozky().size() +
+                                    "," + stavKdePolozkaNeni.getNosnost() + ") do tabulky."); }
+            vypocitane[novyBatoh2.getPolozky().size()][novyBatoh2.getNosnost()] = stavKdePolozkaNeniCopy;
         }
 
 
-        // porovname oba vracene stavy
+        // porovname oba vracene stavy - pseudokod:
         // if (C1+cn) > C0 return(X1.1, C1+cn, m1+vn)
         //            else return(X0.0, C0, m0)
         if ( ((stavKdePolozkaJe.getAktualniCena() + cenaOdebiranePolozky) >
                stavKdePolozkaNeni.getAktualniCena()) ) {
 
-            // zkusime tam vratit polozku a kdy to projde, tak vratime novy stav
-            // stavKdePolozkaJe.setNosnost(stavKdePolozkaJe.getNosnost() + vahaOdebiranePolozky);
+            // zkusime tam vratit polozku zpet a kdy to projde, tak vratime novy stav
             stavKdePolozkaJe.setNosnost(state.getNosnost());
             if ( stavKdePolozkaJe.addItem(odebiranaPolozka1) ) {
-                /*
-                if ( DEBUG ) { System.out.println("Ukladam stav (" + stavKdePolozkaJeCopy.getPolozky().size() +
-                                        "," + stavKdePolozkaJeCopy.getNosnost() + ") do tabulky."); }
-                vypocitane[stavKdePolozkaJeCopy.getPolozky().size()][stavKdePolozkaJeCopy.getNosnost()] = stavKdePolozkaJeCopy;
-                */
                 if ( DEBUG ) {
                     System.out.println("Vracim polozku kde JE (M=" + stavKdePolozkaJe.getNosnost() +
                                     ", n=" + stavKdePolozkaJe.getPolozky().size() +
@@ -181,6 +169,25 @@ public class DynamicAlgorithm implements IAlgorithm {
     private boolean isTrivialInstance(Batoh state) {
         return ( (state.getNosnost() < 1) ||
                 ( state.polozky.isEmpty() ) );
+    }
+
+    /**
+     * Vrati trivialni reseni
+     * @param state
+     * @return
+     */
+    private Batoh getTrivialInstance(Batoh state) {
+        if ( DEBUG ) {
+            System.out.println("Vracim polozku TRIV (M=" + state.getNosnost() +
+                                ", n=" + state.getPolozky().size() +
+                                ", sumaV=" + state.getAktualniZatizeni() +
+                                ", sumaC=" + state.getAktualniCena() +
+                                "), polozky nuluji a nosnost take pokud byla mensi jak 0.");
+        }
+        // TODO return vypocitane[0][0];
+        if ( state.getNosnost() <= 0 ) state.setNosnost(0);
+        state.setPolozky();
+        return state;
     }
 
     /**

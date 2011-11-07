@@ -8,7 +8,7 @@ import java.util.List;
  * Batoh - potomek ItemsContainer, akorat navic ma nosnost a aktualni zatizeni
  * @author Bc. Vojtěch Svoboda <svobovo3@fit.cvut.cz>
  */
-public class Batoh extends ItemsContainer {
+public class Batoh extends ItemsContainer implements Cloneable {
 
     /**
      * Batoh ma navic nosnost a aktualni zatizeni
@@ -145,6 +145,24 @@ public class Batoh extends ItemsContainer {
         this.polozky.clear();
         this.aktualniCena = 0;
         this.aktualniZatizeni = 0;
+    }
+
+    @Override
+    public Batoh clone() {
+        Batoh kopie = new Batoh(this.nosnost);
+        kopie.setPolozky(this.polozky);
+        kopie.setAktualniCena(this.aktualniCena);
+        kopie.setAktualniZatizeni(this.aktualniZatizeni);
+        if ( kopie.getPolozky().size() != this.getPolozky().size() ) {
+            System.err.println("Clone: Pocet polozek se neshoduje!!!");
+        }
+        if ( kopie.getAktualniCena() != this.getAktualniCena() ) {
+            System.err.println("Clone: Aktualni ceny se neshoduji!!!");
+        }
+        if ( kopie.getAktualniZatizeni() != this.getAktualniZatizeni() ) {
+            System.err.println("Clone: Aktualni zatizeni se neshoduje!!!");
+        }
+        return kopie;
     }
 
     public int getAktualniZatizeni() {
