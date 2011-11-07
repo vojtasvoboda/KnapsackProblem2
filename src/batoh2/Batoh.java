@@ -1,5 +1,6 @@
 package batoh2;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -15,6 +16,7 @@ public class Batoh extends ItemsContainer {
     private int nosnost;
     private int aktualniZatizeni;
     private int aktualniCena;
+    private boolean DEBUG = false;
 
     /**
      * Konstruktor, nastavuje nosnost
@@ -44,6 +46,17 @@ public class Batoh extends ItemsContainer {
     }
 
     /**
+     * Nastavi pole polozek a prepocita zatizeni a cenu
+     * @param polozky
+     */
+    @Override
+    public void setPolozky() {
+        this.polozky = new ArrayList<BatohItem>();
+        this.aktualniCena = 0;
+        this.aktualniZatizeni = 0;
+    }
+
+    /**
      * Prida polozku do batohu - wrapper pro predani pouze parametru
      * @param hodnota
      * @param vaha
@@ -69,9 +82,15 @@ public class Batoh extends ItemsContainer {
      */
     private boolean addItemExec(BatohItem item) {
         /* pokud je batoh plny, tak nejde */
-        if ( this.isFull() ) return false;
+        if ( this.isFull() ) {
+            if ( DEBUG ) System.out.println("Batoh je jiz plny. Polozka (" + item.getVaha() + ") se jiz nevejde.");
+            return false;
+        }
         /* pokud je polozka moc velka, tak nejde */
-        if ( this.zbyvaKapacita() < item.getVaha() ) return false;
+        if ( this.zbyvaKapacita() < item.getVaha() ) {
+            if ( DEBUG ) System.out.println("Polozka je moc velka na pridani (" + item.getVaha() + "), kapacita je " + this.zbyvaKapacita());
+            return false;
+        }
         this.polozky.add(item);
         this.aktualniZatizeni += item.getVaha();
         this.aktualniCena += item.getHodnota();
@@ -79,15 +98,25 @@ public class Batoh extends ItemsContainer {
     }
 
     /**
+     * Odstrani polozku
+     * @param item
+     * @return
+     */
+    public boolean removeItem(BatohItem item) {
+        if (this.polozky.remove(item)) {
+            this.aktualniZatizeni -= item.getVaha();
+            this.aktualniCena -= item.getHodnota();
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * Vrati jestli je batoh plny, nebo ne
      * @return
      */
     public boolean isFull() {
-        if ( this.nosnost < this.aktualniZatizeni ) {
-            // System.err.println("Batoh je plny!");
-            return true;
-        }
-        return false;
+        return ( this.nosnost <= this.aktualniZatizeni );
     }
 
     /**

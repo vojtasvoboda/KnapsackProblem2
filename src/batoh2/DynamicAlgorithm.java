@@ -14,6 +14,7 @@ public class DynamicAlgorithm implements IAlgorithm {
     private Barak barak;
     // tabulka pro uchovani vypocitanych instanci [nosnost][cena]
     private Batoh[][] vypocitane;
+    private boolean DEBUG = false;
 
     public DynamicAlgorithm(Batoh batoh, Barak barak) {
         this.batoh = batoh;
@@ -28,7 +29,13 @@ public class DynamicAlgorithm implements IAlgorithm {
         // spustime rekurzivni vypocet
         Batoh cilovy = solveInstance(startovni);
         /* konec algoritmu, takze musime do batohu dat nejlepsi vysledek */
-        System.out.println("Rekurze skoncila.");
+        if ( DEBUG ) {
+            System.out.println("Rekurze skoncila.");
+            System.out.println("Cilovy stav je (M=" + cilovy.getNosnost() +
+                                ", n=" + cilovy.getPolozky().size() +
+                                ", sumaV=" + cilovy.getAktualniZatizeni() +
+                                ", sumaC=" + cilovy.getAktualniCena() + ")");
+        }
         this.batoh.setPolozky(cilovy.getPolozky());
         this.batoh.setAktualniCena(cilovy.getAktualniCena());
         this.batoh.setAktualniZatizeni(cilovy.getAktualniZatizeni());
@@ -51,38 +58,42 @@ public class DynamicAlgorithm implements IAlgorithm {
     private Batoh solveInstance(Batoh state) {
 
         // 18/114 - 42/136 - 88/192 - 3/223 (v, c), suma 151/665
-        System.out.println("Vstupuji do instance (M=" + state.getNosnost() + 
-                            ", n=" + state.getPolozky().size() +
-                            ", sumaV=" + state.getAktualniZatizeni() +
-                            ", sumaC=" + state.getAktualniCena() + ")");
+        if ( DEBUG ) {
+            System.out.println("Vstupuji do instance (M=" + state.getNosnost() +
+                                ", n=" + state.getPolozky().size() +
+                                ", sumaV=" + state.getAktualniZatizeni() +
+                                ", sumaC=" + state.getAktualniCena() + ")");
+        }
 
         // pokud je to trivialni reseni, tak vrat trivialni
         if ( isTrivialInstance(state) ) {
-            System.out.println("Je to trivialni, takze vracim aktualni stav (M=" + state.getNosnost() +
-                                ", n=" + state.getPolozky().size() +
-                                ", sumaV=" + state.getAktualniZatizeni() +
-                                ", sumaC=" + state.getAktualniCena() +
-                                "), polozky nuluji a nosnost take pokud byla mensi jak 0.");
+            if ( DEBUG ) {
+                System.out.println("Vracim polozku TRIV (M=" + state.getNosnost() +
+                                    ", n=" + state.getPolozky().size() +
+                                    ", sumaV=" + state.getAktualniZatizeni() +
+                                    ", sumaC=" + state.getAktualniCena() +
+                                    "), polozky nuluji a nosnost take pokud byla mensi jak 0.");
+            }
             // TODO return vypocitane[0][0];
-            if ( state.getNosnost() < 0 ) state.setNosnost(0);
+            if ( state.getNosnost() <= 0 ) state.setNosnost(0);
             state.setPolozky();
             return state;
         }
 
         // pokud stav uz zname, vratime z tabulky
-        /*
         if ( vypocitane[state.getPolozky().size()][state.getNosnost()] != null ) {
-            return vypocitane[state.getAktualniZatizeni()][state.getAktualniCena()];
+            if ( DEBUG ) { System.out.println("Nasel jsem stav (" + state.getPolozky().size() +
+                                "," + state.getNosnost() + ") v tabulce, vracim."); }
+            return vypocitane[state.getPolozky().size()][state.getNosnost()];
         }
-        */
 
         // aktualne resene polozky (jejich kopie) a definice polozky
         List<BatohItem> aktualniPolozky1 = new ArrayList<BatohItem>(state.getPolozky());
         List<BatohItem> aktualniPolozky2 = new ArrayList<BatohItem>(state.getPolozky());
-        int vahaOdebiranePolozky = aktualniPolozky1.get(aktualniPolozky1.size() - 1).getVaha();
-        int cenaOdebiranePolozky = aktualniPolozky1.get(aktualniPolozky1.size() - 1).getHodnota();
         BatohItem odebiranaPolozka1 = aktualniPolozky1.get(aktualniPolozky1.size() - 1); // asi by sli sjednotit
         BatohItem odebiranaPolozka2 = aktualniPolozky2.get(aktualniPolozky2.size() - 1); // s touto polozkou
+        int vahaOdebiranePolozky = odebiranaPolozka1.getVaha();
+        int cenaOdebiranePolozky = odebiranaPolozka1.getHodnota();
 
 
         // spustime jednu vetev rekurze, kde n-ta polozka *JE* a snizime mozne zatizeni batohu
@@ -91,6 +102,10 @@ public class DynamicAlgorithm implements IAlgorithm {
         aktualniPolozky1.remove(odebiranaPolozka1);
         novyBatoh1.setPolozky(aktualniPolozky1);
         Batoh stavKdePolozkaJe = solveInstance(novyBatoh1);
+        Batoh stavKdePolozkaJeCopy = new Batoh(stavKdePolozkaJe.getNosnost());
+        stavKdePolozkaJeCopy.setPolozky(stavKdePolozkaJe.getPolozky());
+        stavKdePolozkaJeCopy.setAktualniCena(stavKdePolozkaJe.getAktualniCena());
+        stavKdePolozkaJeCopy.setAktualniZatizeni(stavKdePolozkaJe.getAktualniZatizeni());
 
 
         // spustime druhou vetev rekurze, kde n-ta polozka *NENI*
@@ -99,39 +114,58 @@ public class DynamicAlgorithm implements IAlgorithm {
         aktualniPolozky2.remove(odebiranaPolozka2);
         novyBatoh2.setPolozky(aktualniPolozky2);
         Batoh stavKdePolozkaNeni = solveInstance(novyBatoh2);
-        // vypocitane[state.getAktualniZatizeni() - vahaOdebiranePolozky][state.getAktualniCena() - cenaOdebiranePolozky] = stavKdePolozkaNeni;
+        // ulozime kopii do tabulky vypocitanych
+        Batoh stavKdePolozkaNeniCopy = new Batoh(stavKdePolozkaNeni.getNosnost());
+        stavKdePolozkaNeniCopy.setPolozky(stavKdePolozkaNeni.getPolozky());
+        stavKdePolozkaNeniCopy.setAktualniCena(stavKdePolozkaNeni.getAktualniCena());
+        stavKdePolozkaNeniCopy.setAktualniZatizeni(stavKdePolozkaNeni.getAktualniZatizeni());
+        if ( stavKdePolozkaNeniCopy.getPolozky().size() <= barak.polozky.size() ) {
+            if ( DEBUG ) { System.out.println("Ukladam stav (" + stavKdePolozkaNeniCopy.getPolozky().size() +
+                                    "," + stavKdePolozkaNeniCopy.getNosnost() + ") do tabulky."); }
+            // vypocitane[novyBatoh2.getPolozky().size()][novyBatoh2.getNosnost()] = stavKdePolozkaNeniCopy;
+        }
 
 
         // porovname oba vracene stavy
-        // if (C1+cn) > C0 return(X1.1,  C1+cn, m1+vn)
+        // if (C1+cn) > C0 return(X1.1, C1+cn, m1+vn)
         //            else return(X0.0, C0, m0)
         if ( ((stavKdePolozkaJe.getAktualniCena() + cenaOdebiranePolozky) >
-            stavKdePolozkaNeni.getAktualniCena()) ) {
+               stavKdePolozkaNeni.getAktualniCena()) ) {
 
             // zkusime tam vratit polozku a kdy to projde, tak vratime novy stav
+            // stavKdePolozkaJe.setNosnost(stavKdePolozkaJe.getNosnost() + vahaOdebiranePolozky);
+            stavKdePolozkaJe.setNosnost(state.getNosnost());
             if ( stavKdePolozkaJe.addItem(odebiranaPolozka1) ) {
-                // vypocitane[state.getAktualniZatizeni()][state.getAktualniCena()] = stavKdePolozkaJe;
-                stavKdePolozkaJe.setNosnost(stavKdePolozkaJe.getNosnost() + vahaOdebiranePolozky);
-                System.out.println("Vracim polozku kde JE (M=" + stavKdePolozkaJe.getNosnost() +
-                                ", n=" + stavKdePolozkaJe.getPolozky().size() +
-                                ", sumaV=" + stavKdePolozkaJe.getAktualniZatizeni() +
-                                ", sumaC=" + stavKdePolozkaJe.getAktualniCena() + ")");
+                /*
+                if ( DEBUG ) { System.out.println("Ukladam stav (" + stavKdePolozkaJeCopy.getPolozky().size() +
+                                        "," + stavKdePolozkaJeCopy.getNosnost() + ") do tabulky."); }
+                vypocitane[stavKdePolozkaJeCopy.getPolozky().size()][stavKdePolozkaJeCopy.getNosnost()] = stavKdePolozkaJeCopy;
+                */
+                if ( DEBUG ) {
+                    System.out.println("Vracim polozku kde JE (M=" + stavKdePolozkaJe.getNosnost() +
+                                    ", n=" + stavKdePolozkaJe.getPolozky().size() +
+                                    ", sumaV=" + stavKdePolozkaJe.getAktualniZatizeni() +
+                                    ", sumaC=" + stavKdePolozkaJe.getAktualniCena() + ")");
+                }
                 return stavKdePolozkaJe;
 
             } else {
-                System.out.println("Nepovedlo se pridat, vracim polozku kde NENI (M=" + stavKdePolozkaNeni.getNosnost() +
-                                ", n=" + stavKdePolozkaNeni.getPolozky().size() +
-                                ", sumaV=" + stavKdePolozkaNeni.getAktualniZatizeni() +
-                                ", sumaC=" + stavKdePolozkaNeni.getAktualniCena() + ")");
+                if ( DEBUG ) {
+                    System.out.println("Nepovedlo se pridat, vracim polozku kde NENI (M=" + stavKdePolozkaNeni.getNosnost() +
+                                    ", n=" + stavKdePolozkaNeni.getPolozky().size() +
+                                    ", sumaV=" + stavKdePolozkaNeni.getAktualniZatizeni() +
+                                    ", sumaC=" + stavKdePolozkaNeni.getAktualniCena() + ")");
+                }
                 return stavKdePolozkaNeni;
             }
 
-
         } else {
-            System.out.println("Vracim polozku kde NENI (M=" + stavKdePolozkaNeni.getNosnost() +
-                            ", n=" + stavKdePolozkaNeni.getPolozky().size() +
-                            ", sumaV=" + stavKdePolozkaNeni.getAktualniZatizeni() +
-                            ", sumaC=" + stavKdePolozkaNeni.getAktualniCena() + ")");
+            if ( DEBUG ) {
+                System.out.println("Vracim polozku kde NENI (M=" + stavKdePolozkaNeni.getNosnost() +
+                                ", n=" + stavKdePolozkaNeni.getPolozky().size() +
+                                ", sumaV=" + stavKdePolozkaNeni.getAktualniZatizeni() +
+                                ", sumaC=" + stavKdePolozkaNeni.getAktualniCena() + ")");
+            }
             return stavKdePolozkaNeni;
         }
     }
