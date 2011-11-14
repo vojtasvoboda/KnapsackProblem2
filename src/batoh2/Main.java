@@ -15,11 +15,13 @@ public class Main {
     /* nosnost batohu pro testovaci funkci */
     final static int NOSNOST = 32;
     /* maximalni pocet nactenych instanci (spis pro testovani) */
-    final static int MAX_INSTANCES = 1;
+    final static int MAX_INSTANCES = 50;
     /* soubor s instancema (soubory jsou: 4, 10, 15, 20, 22, 25, 27, 30, 32, 35, 37, 40) */
-    final static int FILE_NO = 4;
+    final static int FILE_NO = 40;
     /* pocet opakovani celeho vypoctu */
     final static int ITERATION_NO = 1;
+    /* pocet aproximaci (interval od jedne) */
+    final static int APROXIMATION_COUNT = 15;
 
     /**
      * Polozky v baraku lze nacist bud z testovaci mnoziny - funkce loadTestItems,
@@ -45,50 +47,74 @@ public class Main {
 
         /* zapnu mereni casu */
         long startTime = System.currentTimeMillis();
+        long lastMiddleTime = System.currentTimeMillis();
+        long middleTime;
+        double odchylka = 0d, maximalniOdchylka = 0d, spravneReseni, relativniOdchylka, sumaOdchylek = 0d;
 
         System.out.println("Vypis polozek: instance, optimalniCena, vypocitanaCena, zatizeni, nosnost");
+        System.out.println("Aproximace\tČas výpočtu\tRelativní odchylka\tMaximální odchylka");
 
-        /* spustime cely vypocet nekolikrat */
-        for (int a = 0; a < ITERATION_NO; a++) {
-            /* projdeme vsechny instance a vypocitame je */
-            for ( int i = 0; (i < instanceProblemu.length) && (i < MAX_INSTANCES); i++ ) {
+        /* pro vsechny ruzne aproximace */
+        for (int j = 1; j <= APROXIMATION_COUNT; j ++) {            
+            /* spustime cely vypocet nekolikrat */
+            for (int a = 0; a < ITERATION_NO; a++) {
+                /* projdeme vsechny instance a vypocitame je */
+                for ( int i = 0; (i < instanceProblemu.length) && (i < MAX_INSTANCES); i++ ) {
 
-                /* preskocime prazdne radky */
-                if (instanceProblemu[i][0] == null) break;
-                
-                /* naplnime barak polozkami */
-                loadItemFromFile(barak, instanceProblemu[i]);
+                    /* preskocime prazdne radky */
+                    if (instanceProblemu[i][0] == null) break;
 
-                /* nastavime nosnost batohu */
-                batoh.setNosnost(Integer.parseInt(instanceProblemu[i][2]));
+                    /* naplnime barak polozkami */
+                    loadItemFromFile(barak, instanceProblemu[i]);
 
-                /* ziskej polozky v batohu z baraku */
-                // System.out.println("Startuji DynamicAlgorithm");
-                // BranchBoundAlgorithm bbAlg = new BranchBoundAlgorithm(barak, batoh);
-                // bbAlg.computeStolenItems();
-                // BruteForceAlgorithm bfAlg = new BruteForceAlgorithm(barak, batoh);
-                // bfAlg.computeStolenItems();
-                DynamicAlgorithm dynAlg = new DynamicAlgorithm(batoh, barak);
-                dynAlg.computeStolenItems();
+                    /* nastavime nosnost batohu */
+                    batoh.setNosnost(Integer.parseInt(instanceProblemu[i][2]));
 
-                /* vypiseme polozky */
-                // System.out.println("Vypis polozek v batohu instance " + instanceProblemu[i][0]);
-                // batoh.writeItems();
-                /*System.out.println(instanceProblemu[i][0] + "\t" +
-                                   reseniProblemu[i][2] + "\t" +
-                                   batoh.getAktualniCena() + "\t" +
-                                   batoh.getAktualniZatizeni() + "\t" +
-                                   batoh.getNosnost());*/
-                
-                /* vycistime batoh i barak pred dalsi instanci */
-                barak.clear();
-                batoh.clear();
-            }
-        }
+                    /* ziskej polozky v batohu z baraku */
+                    // System.out.println("Startuji DynamicAlgorithm");
+                    // BranchBoundAlgorithm bbAlg = new BranchBoundAlgorithm(barak, batoh);
+                    // bbAlg.computeStolenItems();
+                    // BruteForceAlgorithm bfAlg = new BruteForceAlgorithm(barak, batoh);
+                    // bfAlg.computeStolenItems();
+                    // DynamicAlgorithm dynAlg = new DynamicAlgorithm(batoh, barak);
+                    DynamicAlgorithmAprox dynAlg = new DynamicAlgorithmAprox(batoh, barak);
+                    dynAlg.setAprox(j);
+                    dynAlg.computeStolenItems();
+
+                    /* vypiseme polozky */
+                    // System.out.println("Vypis polozek v batohu instance " + instanceProblemu[i][0]);
+                    // batoh.writeItems();
+                    /*
+                    System.out.println(instanceProblemu[i][0] + "\t" +
+                                       reseniProblemu[i][2] + "\t" +
+                                       batoh.getAktualniCena() + "\t" +
+                                       batoh.getAktualniZatizeni() + "\t" +
+                                       batoh.getNosnost());
+                    */
+                    /* vypocitame odchylku */
+                    spravneReseni = Double.parseDouble(reseniProblemu[i][2]);
+                    odchylka = (double) ( spravneReseni - (double) batoh.getAktualniCena() ) / spravneReseni;
+                    if ( odchylka > maximalniOdchylka ) maximalniOdchylka = odchylka;
+                    sumaOdchylek += odchylka;
+                    /* vycistime batoh i barak pred dalsi instanci */
+                    barak.clear();
+                    batoh.clear();
+                }
+            } // iteration
+
+            middleTime = System.currentTimeMillis();
+            // System.out.println("Vypocet aprox=" + j + " trval " + (middleTime - lastMiddleTime) + "ms");
+            relativniOdchylka = sumaOdchylek / instanceProblemu.length;
+            System.out.println(j + "\t" + (middleTime - lastMiddleTime) + "\t" + relativniOdchylka + "\t" + maximalniOdchylka);
+            lastMiddleTime = middleTime;
+            sumaOdchylek = 0d;
+
+        } // aprox
+
         /* konec mereni casu */
         long endTime = System.currentTimeMillis();
         startTime = endTime - startTime;
-        System.out.println("Vypocet souboru " + FILE_NO + " trval " + startTime + "ms");
+        System.out.println("Vypocet souboru " + FILE_NO + " trval celkem " + startTime + "ms");
     }
 
     /**
